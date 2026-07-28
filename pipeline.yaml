@@ -1,0 +1,38 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  terraformWorkingDirectory: '.'
+
+steps:
+# Checkout source code
+- checkout: self
+
+# Download Secure File
+- task: DownloadSecureFile@1
+  name: tfmSecureFile
+  displayName: 'Download Secure File'
+  inputs:
+    secureFile: 'tfm-sa-gcp-amar.json'
+
+# Display downloaded file path
+- script: |
+    echo "Secure file downloaded to:"
+    echo "$(tfmSecureFile.secureFilePath)"
+    ls -l "$(dirname $(tfmSecureFile.secureFilePath))"
+  displayName: 'Verify Secure File'
+
+# (Optional) Export environment variable if required
+- script: |
+    export GOOGLE_APPLICATION_CREDENTIALS="$(tfmSecureFile.secureFilePath)"
+
+    terraform version
+
+    terraform init
+
+    terraform plan -out=tfplan
+  displayName: 'Terraform Init & Plan'
+  workingDirectory: $(terraformWorkingDirectory)

@@ -12,7 +12,7 @@ locals {
     managed_by  = "terraform"
   }
 
-  module "google_gke_cluster" {
+  module "confluent_config" {
     source = "../../modules/confluent_config"
 
     env_name                    = local.env_name

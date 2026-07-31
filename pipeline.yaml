@@ -13,7 +13,7 @@ parameters:
   - name: terraformWorkingDirectory
     displayName: Terraform working directory
     type: string
-    default: examples/basic
+    default: ./environments/pr/
 
   # Use for trusted Terraform CLI options, for example: -var-file=production.tfvars
   - name: terraformPlanExtraArgs

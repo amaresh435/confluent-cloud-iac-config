@@ -1,38 +1,66 @@
 trigger:
-- main
+  - main
 
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  terraformWorkingDirectory: '.'
+parameters:
+  - name: terraformVersion
+    displayName: Terraform version
+    type: string
+    default: '1.9.8'
+
+  - name: terraformWorkingDirectory
+    displayName: Terraform working directory
+    type: string
+    default: examples/basic
+
+  # Use for trusted Terraform CLI options, for example: -var-file=production.tfvars
+  - name: terraformPlanExtraArgs
+    displayName: Extra terraform plan arguments
+    type: string
+    default: ''
+
+  # Use for trusted Terraform CLI options, for example: -lock-timeout=5m
+  - name: terraformApplyExtraArgs
+    displayName: Extra terraform apply arguments
+    type: string
+    default: ''
 
 steps:
-# Checkout source code
-- checkout: self
+  - checkout: self
 
-# Download Secure File
-- task: DownloadSecureFile@1
-  name: tfmSecureFile
-  displayName: 'Download Secure File'
-  inputs:
-    secureFile: 'tfm-sa-gcp-amar.json'
+  - task: DownloadSecureFile@1
+    name: tfmSecureFile
+    displayName: Download GCP service-account credential
+    inputs:
+      secureFile: tfm-sa-gcp-amar.json
 
-# Display downloaded file path
-- script: |
-    echo "Secure file downloaded to:"
-    echo "$(tfmSecureFile.secureFilePath)"
-    ls -l "$(dirname $(tfmSecureFile.secureFilePath))"
-  displayName: 'Verify Secure File'
+  - task: TerraformInstaller@1
+    displayName: Install Terraform ${{ parameters.terraformVersion }}
+    inputs:
+      terraformVersion: ${{ parameters.terraformVersion }}
 
-# (Optional) Export environment variable if required
-- script: |
-    export GOOGLE_APPLICATION_CREDENTIALS="$(tfmSecureFile.secureFilePath)"
+  - script: terraform init -input=false
+    displayName: Terraform init
+    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-    terraform version
+  - script: terraform plan -input=false -out=tfplan ${{ parameters.terraformPlanExtraArgs }}
+    displayName: Terraform plan
+    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-    terraform init
-
-    terraform plan -out=tfplan
-  displayName: 'Terraform Init & Plan'
-  workingDirectory: $(terraformWorkingDirectory)
+  - script: terraform apply -input=false -auto-approve ${{ parameters.terraformApplyExtraArgs }} tfplan
+    displayName: Terraform apply
+    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)

@@ -1,7 +1,7 @@
 locals {
   environment_names = var.env_name != null || var.prod_name != null ? {
     development = coalesce(var.env_name, "development")
-    production  = coalesce(var.prod_name, "production")
+    #production  = coalesce(var.prod_name, "production")
   } : var.environment_names
 
   gcp_region = coalesce(var.region, var.gcp_region)

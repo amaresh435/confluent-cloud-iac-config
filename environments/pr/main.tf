@@ -11,16 +11,17 @@ locals {
     environment = local.env_name
     managed_by  = "terraform"
   }
+}
 
-  module "confluent_config" {
-    source = "../../modules/confluent_config"
+module "confluent_config" {
+  source = "../../modules/confluent_config"
 
-    env_name                    = local.env_name
-    prod_name                   = local.prod_name
-    project_id                  = local.gcp_project_id
-    region                      = local.env_location
-    resource_prefix             = local.resource_prefix
-    labels                      = local.labels
-    tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
-    tfm_sa_confluent_api_secret = tfm_sa_confluent_api_secret
+  env_name                    = local.env_name
+  prod_name                   = local.prod_name
+  project_id                  = local.gcp_project_id
+  region                      = local.env_location
+  resource_prefix             = local.resource_prefix
+  labels                      = local.labels
+  tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
+  tfm_sa_confluent_api_secret = tfm_sa_confluent_api_secret
 }

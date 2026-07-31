@@ -1,75 +1,104 @@
-variable "environments" {
-  description = "Environments and their Dedicated GCP Kafka clusters. Each map key is a stable Terraform identifier."
-  type = map(object({
-    display_name      = string
-    stream_governance = optional(string)
-    cluster = object({
-      display_name        = string
-      region              = string
-      availability        = string
-      cku                 = number
-      network_id          = optional(string)
-      deletion_protection = optional(bool, true)
-    })
-  }))
+variable "environment_names" {
+  description = "Exactly two Confluent Cloud environments, keyed by stable Terraform identifiers."
+  type        = map(string)
 
-  validation {
-    condition = alltrue([
-      for environment in values(var.environments) :
-      contains(["SINGLE_ZONE", "MULTI_ZONE"], environment.cluster.availability)
-    ])
-    error_message = "Dedicated cluster availability must be SINGLE_ZONE or MULTI_ZONE."
+  default = {
+    development = "development"
+    production  = "production"
   }
 
   validation {
-    condition = alltrue([
-      for environment in values(var.environments) :
-      environment.cluster.availability != "MULTI_ZONE" || environment.cluster.cku >= 2
-    ])
-    error_message = "MULTI_ZONE Dedicated clusters require at least 2 CKUs."
+    condition     = length(var.environment_names) == 2
+    error_message = "Exactly two Confluent environments must be supplied."
   }
 }
 
-variable "service_accounts" {
-  description = "Service accounts to create, keyed by a stable Terraform identifier."
-  type = map(object({
-    display_name = string
-    description  = optional(string)
-  }))
-  default = {}
+# Compatibility inputs for the calling configuration. When either name is set,
+# they take precedence over environment_names for the two managed environments.
+variable "env_name" {
+  description = "Development Confluent environment display name."
+  type        = string
+  default     = null
+  nullable    = true
 }
 
-variable "users" {
-  description = "Existing Confluent Cloud users, keyed by a stable Terraform identifier and looked up by email."
+variable "prod_name" {
+  description = "Production Confluent environment display name."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "project_id" {
+  description = "GCP project ID retained for compatibility with the root configuration. Confluent-managed GCP Kafka clusters do not use it."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "region" {
+  description = "Alias for gcp_region. When set, it takes precedence."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "resource_prefix" {
+  description = "Optional prefix used for the GCP Dedicated Kafka cluster display name."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "labels" {
+  description = "Labels retained for compatibility with the root configuration. Confluent Cloud environment and Kafka cluster resources do not support GCP labels."
   type        = map(string)
   default     = {}
 }
 
-variable "role_bindings" {
-  description = "RBAC bindings. principal_type is service_account or user; scope is environment, cluster, or a custom CRN."
-  type = map(object({
-    principal_type  = string
-    principal_key   = string
-    role_name       = string
-    scope           = string
-    environment_key = optional(string)
-    crn_pattern     = optional(string)
-  }))
-  default = {}
+variable "tfm_sa_confluent_api_key" {
+  description = "Confluent Cloud API key retained for compatibility. Configure it on the root Confluent provider or with CONFLUENT_CLOUD_API_KEY."
+  type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+}
 
-  validation {
-    condition = alltrue([
-      for binding in values(var.role_bindings) :
-      contains(["service_account", "user"], binding.principal_type)
-    ])
-    error_message = "role_bindings.principal_type must be service_account or user."
-  }
+variable "tfm_sa_confluent_api_secret" {
+  description = "Confluent Cloud API secret retained for compatibility. Configure it on the root Confluent provider or with CONFLUENT_CLOUD_API_SECRET."
+  type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+}
 
-  validation {
-    condition = alltrue([
-      for binding in values(var.role_bindings) :
-      contains(["environment", "cluster", "custom"], binding.scope)
-    ])
-    error_message = "role_bindings.scope must be environment, cluster, or custom."
-  }
+variable "cluster_environment_key" {
+  description = "Key from environment_names in which to create the Dedicated GCP Kafka cluster."
+  type        = string
+  default     = "development"
+}
+
+variable "cluster_display_name" {
+  description = "Display name of the Dedicated GCP Kafka cluster."
+  type        = string
+  default     = "development-gcp-dedicated"
+}
+
+variable "gcp_region" {
+  description = "Confluent Cloud GCP region for the Kafka cluster."
+  type        = string
+  default     = "us-central1"
+}
+
+variable "network_id" {
+  description = "Optional existing Confluent private network ID for the Kafka cluster."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "deletion_protection" {
+  description = "Prevents deletion of the Dedicated Kafka cluster unless set to false."
+  type        = bool
+  default     = true
 }

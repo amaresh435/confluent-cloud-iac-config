@@ -1,70 +1,40 @@
-resource "confluent_environment" "prof_eng" {
-  for_each = var.environments
+locals {
+  environment_names = var.env_name != null || var.prod_name != null ? {
+    development = coalesce(var.env_name, "development")
+    production  = coalesce(var.prod_name, "production")
+  } : var.environment_names
 
-  display_name = each.value.display_name
+  gcp_region = coalesce(var.region, var.gcp_region)
 
-  dynamic "stream_governance" {
-    for_each = each.value.stream_governance == null ? [] : [each.value.stream_governance]
-    content {
-      package = stream_governance.value
-    }
-  }
-
+  cluster_display_name = var.resource_prefix == null ? var.cluster_display_name : "${var.resource_prefix}-gcp-dedicated"
 }
 
-resource "confluent_kafka_cluster" "prof_eng" {
-  for_each = var.environments
+resource "confluent_environment" "this" {
+  for_each = local.environment_names
 
-  display_name        = each.value.cluster.display_name
-  availability        = each.value.cluster.availability
+  display_name = each.value
+}
+
+# A Dedicated GCP cluster at one CKU must use SINGLE_ZONE availability.
+resource "confluent_kafka_cluster" "gcp_dedicated" {
+  display_name        = local.cluster_display_name
+  availability        = "SINGLE_ZONE"
   cloud               = "GCP"
-  region              = each.value.cluster.region
-  deletion_protection = each.value.cluster.deletion_protection
+  region              = local.gcp_region
+  deletion_protection = var.deletion_protection
 
   dedicated {
-    cku = each.value.cluster.cku
+    cku = 1
   }
 
   environment {
-    id = confluent_environment.prof_eng[each.key].id
+    id = confluent_environment.this[var.cluster_environment_key].id
   }
 
   dynamic "network" {
-    for_each = each.value.cluster.network_id == null ? [] : [each.value.cluster.network_id]
+    for_each = var.network_id == null ? [] : [var.network_id]
     content {
       id = network.value
     }
   }
-}
-
-resource "confluent_service_account" "prof_eng" {
-  for_each = var.service_accounts
-
-  display_name = each.value.display_name
-  description  = each.value.description
-}
-
-data "confluent_user" "prof_eng" {
-  for_each = var.users
-
-  email = each.value
-}
-
-locals {
-  role_bindings = {
-    for key, binding in var.role_bindings : key => merge(binding, {
-      principal = binding.principal_type == "service_account" ? "User:${confluent_service_account.prof_eng[binding.principal_key].id}" : "User:${data.confluent_user.prof_eng[binding.principal_key].id}"
-      crn_pattern = binding.scope == "environment" ? confluent_environment.prof_eng[binding.environment_key].resource_name : (
-        binding.scope == "cluster" ? confluent_kafka_cluster.prof_eng[binding.environment_key].rbac_crn : binding.crn_pattern
-      )
-    })
-  }
-}
-
-resource "confluent_role_binding" "prof_eng" {
-  for_each = local.role_bindings
-
-  principal   = each.value.principal
-  role_name   = each.value.role_name
-  crn_pattern = each.value.crn_pattern
 }

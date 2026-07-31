@@ -36,10 +36,24 @@ steps:
     inputs:
       secureFile: tfm-sa-gcp-amar.json
 
-  - task: TerraformInstaller@1
+  #- task: TerraformInstaller@1
+  - bash: |
+      set -euo pipefail
+
+      terraform_version='${{ parameters.terraformVersion }}'
+      install_dir="$HOME/.local/bin"
+      archive="terraform_${terraform_version}_linux_amd64.zip"
+      download_url="https://releases.hashicorp.com/terraform/${terraform_version}/${archive}"
+
+      mkdir -p "$install_dir"
+      curl --fail --silent --show-error --location --retry 3 "$download_url" --output "/tmp/$archive"
+      unzip -o "/tmp/$archive" -d "$install_dir"
+      chmod +x "$install_dir/terraform"
+      echo "##vso[task.prependpath]$install_dir"
+      "$install_dir/terraform" version
     displayName: Install Terraform ${{ parameters.terraformVersion }}
-    inputs:
-      terraformVersion: ${{ parameters.terraformVersion }}
+    #inputs:
+    #  terraformVersion: ${{ parameters.terraformVersion }}
 
   - script: terraform init -input=false
     displayName: Terraform init

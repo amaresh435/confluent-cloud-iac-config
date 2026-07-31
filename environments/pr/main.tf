@@ -23,5 +23,5 @@ module "confluent_config" {
   resource_prefix             = local.resource_prefix
   labels                      = local.labels
   tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
-  tfm_sa_confluent_api_secret = tfm_sa_confluent_api_secret
+  tfm_sa_confluent_api_secret = local.tfm_sa_confluent_api_secret
 }

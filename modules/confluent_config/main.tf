@@ -15,6 +15,7 @@ resource "confluent_environment" "this" {
   display_name = each.value
 }
 
+/*
 # A Dedicated GCP cluster at one CKU must use SINGLE_ZONE availability.
 resource "confluent_kafka_cluster" "gcp_dedicated" {
   display_name        = local.cluster_display_name
@@ -38,3 +39,4 @@ resource "confluent_kafka_cluster" "gcp_dedicated" {
     }
   }
 }
+*/

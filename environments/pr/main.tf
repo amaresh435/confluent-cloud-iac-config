@@ -24,4 +24,5 @@ module "confluent_config" {
   labels                      = local.labels
   tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
   tfm_sa_confluent_api_secret = local.tfm_sa_confluent_api_secret
+  deletion_protection         = local.deletion_protection
 }

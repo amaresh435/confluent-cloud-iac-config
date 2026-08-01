@@ -16,4 +16,6 @@ terraform {
 
 provider "confluent" {
   # Credentials come from CONFLUENT_CLOUD_API_KEY and CONFLUENT_CLOUD_API_SECRET.
+CONFLUENT_CLOUD_API_KEY    = local.tfm_sa_confluent_api_key
+CONFLUENT_CLOUD_API_SECRET = local.tfm_sa_confluent_api_secret
 }

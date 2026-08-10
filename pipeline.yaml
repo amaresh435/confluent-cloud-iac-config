@@ -63,7 +63,7 @@ steps:
       CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
       CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-  - script: terraform plan -input=false -out=tfplan ${{ parameters.terraformPlanExtraArgs }}
+  - script: terraform plan -input=false -out=tfplan 
     displayName: Terraform plan
     workingDirectory: ${{ parameters.terraformWorkingDirectory }}
     env:
@@ -71,7 +71,7 @@ steps:
       CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
       CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-  - script: terraform apply -input=false -auto-approve ${{ parameters.terraformApplyExtraArgs }} tfplan
+  - script: terraform apply -input=false -auto-approve tfplan
     displayName: Terraform apply
     workingDirectory: ${{ parameters.terraformWorkingDirectory }}
     env:

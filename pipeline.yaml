@@ -16,16 +16,16 @@ parameters:
     default: ./environments/pr/
 
   # Use for trusted Terraform CLI options, for example: -var-file=production.tfvars
-  - name: terraformPlanExtraArgs
-    displayName: Extra terraform plan arguments
-    type: string
-    default: ''
+  #- name: terraformPlanExtraArgs
+  #  displayName: Extra terraform plan arguments
+  #  type: string
+  #  default: ''
 
   # Use for trusted Terraform CLI options, for example: -lock-timeout=5m
-  - name: terraformApplyExtraArgs
-    displayName: Extra terraform apply arguments
-    type: string
-    default: ''
+  #- name: terraformApplyExtraArgs
+  #  displayName: Extra terraform apply arguments
+  #  type: string
+  #  default: ''
 
 steps:
   - checkout: self

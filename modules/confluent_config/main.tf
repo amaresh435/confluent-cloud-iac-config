@@ -4,7 +4,7 @@ locals {
     #production  = coalesce(var.prod_name, "production")
   } : var.environment_names
 
-  gcp_region = coalesce(var.region, var.gcp_region)
+  gcp_region      = coalesce(var.region, var.gcp_region)
   resource_prefix = join("-", [var.prod_name, var.env_name])
 
   cluster_display_name = var.resource_prefix == null ? var.cluster_display_name : "${var.resource_prefix}-gcp-dedicated"

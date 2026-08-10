@@ -18,7 +18,7 @@ module "confluent_config" {
 
   env_name                    = local.env_name
   prod_name                   = local.prod_name
-  project_id                  = local.gcp_project_id
+  gcp_project                 = local.gcp_project_id
   region                      = local.env_location
   resource_prefix             = local.resource_prefix
   labels                      = local.labels

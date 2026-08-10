@@ -29,11 +29,10 @@ variable "prod_name" {
   nullable    = true
 }
 
-variable "project_id" {
+variable "gcp_project" {
   description = "GCP project ID retained for compatibility with the root configuration. Confluent-managed GCP Kafka clusters do not use it."
   type        = string
-  default     = null
-  nullable    = true
+  default     = "vidya-00001"
 }
 
 variable "region" {

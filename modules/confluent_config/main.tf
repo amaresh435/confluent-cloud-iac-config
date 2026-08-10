@@ -10,12 +10,12 @@ locals {
   cluster_display_name = var.resource_prefix == null ? var.cluster_display_name : "${var.resource_prefix}-gcp-dedicated"
 }
 
-resource "confluent_environment" "this" {
-  for_each = local.environment_names
-
-  display_name = each.value
-}
-
+#resource "confluent_environment" "this" {
+#  for_each = local.environment_names
+#
+#  display_name = each.value
+#}
+#
 # A Dedicated GCP cluster at one CKU must use SINGLE_ZONE availability.
 resource "confluent_kafka_cluster" "gcp_dedicated" {
   display_name        = local.cluster_display_name
@@ -29,7 +29,7 @@ resource "confluent_kafka_cluster" "gcp_dedicated" {
   }
 
   environment {
-    id = confluent_environment.this[var.cluster_environment_key].id
+    id = confluent_environment.main[var.cluster_environment_key].id
   }
 
   dynamic "network" {

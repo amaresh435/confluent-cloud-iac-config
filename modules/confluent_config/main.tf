@@ -16,8 +16,23 @@ locals {
 #  display_name = each.value
 #}
 #
+
+data "confluent_organization" "main" {}
+
+resource "confluent_environment" "main" {
+  for_each     = { for suffix in var.suffix : suffix => suffix }
+  display_name = join("-", [local.resource_prefix, each.key, "env"])
+
+  stream_governance {
+    package = var.stream_governance
+  }
+}
+
+
 # A Dedicated GCP cluster at one CKU must use SINGLE_ZONE availability.
 resource "confluent_kafka_cluster" "gcp_dedicated" {
+  for_each     = { for suffix in var.suffix : suffix => suffix }
+
   display_name        = local.cluster_display_name
   availability        = "SINGLE_ZONE"
   cloud               = "GCP"
@@ -29,7 +44,7 @@ resource "confluent_kafka_cluster" "gcp_dedicated" {
   }
 
   environment {
-    id = confluent_environment.main[var.cluster_environment_key].id
+    id = confluent_environment.main[each.key].id
   }
 
   dynamic "network" {
@@ -37,17 +52,6 @@ resource "confluent_kafka_cluster" "gcp_dedicated" {
     content {
       id = network.value
     }
-  }
-}
-
-data "confluent_organization" "main" {}
-
-resource "confluent_environment" "main" {
-  for_each     = { for suffix in var.suffix : suffix => suffix }
-  display_name = join("-", [local.resource_prefix, each.key, "env"])
-
-  stream_governance {
-    package = var.stream_governance
   }
 }
 

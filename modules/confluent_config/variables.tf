@@ -101,3 +101,26 @@ variable "deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "stream_governance" {
+  type        = string
+  description = "Optional governance mode: ESSENTIALS or ADVANCED."
+  default     = "ADVANCED"
+
+  validation {
+    condition     = contains(["ESSENTIALS", "ADVANCED"], var.stream_governance)
+    error_message = "Value must be one of: ESSENTIALS, ADVANCED."
+  }
+}
+
+variable "suffix" {
+  type        = list(string)
+  default     = []
+  description = "Suffixes appended to resource names."
+}
+
+variable "secret_service_accounts" {
+  type        = map(string)
+  description = "Service accounts that should have access to the API key secret."
+  default     = {}
+}

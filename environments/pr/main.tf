@@ -6,6 +6,8 @@ locals {
   env_location                = "us-central1"
   tfm_sa_confluent_api_key    = data.google_secret_manager_secret_version.tfm_confluent_api_key.secret_data
   tfm_sa_confluent_api_secret = data.google_secret_manager_secret_version.tfm_confluent_api_secret.secret_data
+  confluent_cltr_name         = [join("-", [local.resource_prefix])]
+  secret_service_accounts     = ["terraform@vidya-00001.iam.gserviceaccount.com"]
 
   labels = {
     environment = local.env_name
@@ -25,4 +27,6 @@ module "confluent_config" {
   tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
   tfm_sa_confluent_api_secret = local.tfm_sa_confluent_api_secret
   deletion_protection         = false
+  confluent_cltr_name         = local.confluent_cltr_name
+  secret_service_accounts     = local.secret_service_accounts
 }

@@ -77,10 +77,10 @@ variable "cluster_environment_key" {
   default     = "development"
 }
 
-variable "cluster_display_name" {
+variable "confluent_cltr_name" {
   description = "Display name of the Dedicated GCP Kafka cluster."
-  type        = string
-  default     = "development-gcp-dedicated"
+  type        = list(string)
+  default     = ["development-gcp-dedicated"]
 }
 
 variable "gcp_region" {
@@ -113,14 +113,14 @@ variable "stream_governance" {
   }
 }
 
-variable "suffix" {
+variable "cltr_name" {
   type        = list(string)
   default     = []
   description = "Suffixes appended to resource names."
 }
 
 variable "secret_service_accounts" {
-  type        = map(string)
+  type        = list(string)
   description = "Service accounts that should have access to the API key secret."
-  default     = {}
+  default     = []
 }

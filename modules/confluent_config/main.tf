@@ -7,20 +7,13 @@ locals {
   gcp_region      = coalesce(var.region, var.gcp_region)
   resource_prefix = join("-", [var.prod_name, var.env_name])
 
-  cluster_display_name = var.resource_prefix == null ? var.cluster_display_name : "${var.resource_prefix}-gcp-dedicated"
 }
-
-#resource "confluent_environment" "this" {
-#  for_each = local.environment_names
-#
-#  display_name = each.value
-#}
-#
 
 data "confluent_organization" "main" {}
 
 resource "confluent_environment" "main" {
-  for_each     = { for suffix in var.suffix : suffix => suffix }
+  for_each = toset(var.confluent_cltr_name)
+
   display_name = join("-", [local.resource_prefix, each.key, "env"])
 
   stream_governance {
@@ -28,12 +21,11 @@ resource "confluent_environment" "main" {
   }
 }
 
-
 # A Dedicated GCP cluster at one CKU must use SINGLE_ZONE availability.
 resource "confluent_kafka_cluster" "gcp_dedicated" {
-  for_each     = { for suffix in var.suffix : suffix => suffix }
+  for_each = toset(var.confluent_cltr_name)
 
-  display_name        = local.cluster_display_name
+  display_name        = each.key
   availability        = "SINGLE_ZONE"
   cloud               = "GCP"
   region              = local.gcp_region
@@ -61,7 +53,8 @@ resource "confluent_service_account" "main" {
 }
 
 resource "confluent_role_binding" "main" {
-  for_each    = { for suffix in var.suffix : suffix => suffix }
+  for_each = toset(var.confluent_cltr_name)
+
   principal   = "User:${confluent_service_account.main.id}"
   role_name   = "EnvironmentAdmin"
   crn_pattern = confluent_environment.main[each.key].resource_name
@@ -129,7 +122,7 @@ resource "google_secret_manager_secret_version" "apikey_secret" {
 }
 
 resource "google_secret_manager_secret_iam_member" "apikey_key_viewer" {
-  for_each = var.secret_service_accounts
+  for_each = toset(var.secret_service_accounts)
 
   project   = var.gcp_project
   secret_id = google_secret_manager_secret.apikey_key.id
@@ -138,7 +131,7 @@ resource "google_secret_manager_secret_iam_member" "apikey_key_viewer" {
 }
 
 resource "google_secret_manager_secret_iam_member" "apikey_key_accessor" {
-  for_each = var.secret_service_accounts
+  for_each = toset(var.secret_service_accounts)
 
   project   = var.gcp_project
   secret_id = google_secret_manager_secret.apikey_key.id
@@ -147,7 +140,7 @@ resource "google_secret_manager_secret_iam_member" "apikey_key_accessor" {
 }
 
 resource "google_secret_manager_secret_iam_member" "apikey_secret_viewer" {
-  for_each = var.secret_service_accounts
+  for_each = toset(var.secret_service_accounts)
 
   project   = var.gcp_project
   secret_id = google_secret_manager_secret.apikey_secret.id
@@ -156,7 +149,7 @@ resource "google_secret_manager_secret_iam_member" "apikey_secret_viewer" {
 }
 
 resource "google_secret_manager_secret_iam_member" "apikey_secret_accessor" {
-  for_each = var.secret_service_accounts
+  for_each = toset(var.secret_service_accounts)
 
   project   = var.gcp_project
   secret_id = google_secret_manager_secret.apikey_secret.id

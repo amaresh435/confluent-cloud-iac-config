@@ -95,10 +95,10 @@ stages:
       - job: ApprovalGate
         displayName: Wait for approval
         pool: server
-        timeoutInMinutes: 4320  # 3 days
+        timeoutInMinutes: 3 
         steps:
           - task: ManualValidation@0
-            timeoutInMinutes: 4320
+            timeoutInMinutes: 3
             inputs:
               notifyUsers: |
                 amareshguligoudar@gmail.com

@@ -130,7 +130,7 @@ stages:
             displayName: Install Terraform ${{ parameters.terraformVersion }}
 
 
-          - script: terraform apply -input=false -auto-approve tfplan
+          - script: terraform apply -input=false -auto-approve
             displayName: Terraform apply
             workingDirectory: $(tfWorkingDir)
             env:

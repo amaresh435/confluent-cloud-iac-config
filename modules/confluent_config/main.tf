@@ -23,7 +23,7 @@ resource "confluent_environment" "main" {
 resource "confluent_kafka_cluster" "gcp_dedicated" {
   for_each = toset(var.confluent_cltr_name)
 
-  display_name        = join("-", ["var.resource_prefix", "each.key"])
+  display_name        = join("-", [var.resource_prefix, "each.key"])
   availability        = "SINGLE_ZONE"
   cloud               = "GCP"
   region              = local.gcp_region

@@ -104,9 +104,9 @@ stages:
                 amareshguligoudar@gmail.com
               instructions: 'Review the Terraform plan output and approve to proceed with apply.'
       
-      - job: Apply
-        displayName: Terraform Apply
-        steps:
+      #- job: Apply
+      #  displayName: Terraform Apply
+      #  steps:
           - checkout: self
 
           - task: DownloadSecureFile@1

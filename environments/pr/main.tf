@@ -15,19 +15,18 @@ locals {
   }
 }
 
-#module "confluent_config" {
-#  source = "../../modules/confluent_config"
-#
-#  env_name                    = local.env_name
-#  prod_name                   = local.prod_name
-#  gcp_project                 = local.gcp_project_id
-#  region                      = local.env_location
-#  resource_prefix             = local.resource_prefix
-#  labels                      = local.labels
-#  tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
-#  tfm_sa_confluent_api_secret = local.tfm_sa_confluent_api_secret
-#  deletion_protection         = false
-#  confluent_cltr_name         = local.confluent_cltr_name
-#  secret_service_accounts     = local.secret_service_accounts
-#}
-#
+module "confluent_config" {
+  source = "../../modules/confluent_config"
+
+  env_name                    = local.env_name
+  prod_name                   = local.prod_name
+  gcp_project                 = local.gcp_project_id
+  region                      = local.env_location
+  resource_prefix             = local.resource_prefix
+  labels                      = local.labels
+  tfm_sa_confluent_api_key    = local.tfm_sa_confluent_api_key
+  tfm_sa_confluent_api_secret = local.tfm_sa_confluent_api_secret
+  deletion_protection         = false
+  confluent_cltr_name         = local.confluent_cltr_name
+  secret_service_accounts     = local.secret_service_accounts
+}

@@ -92,6 +92,18 @@ stages:
     dependsOn: Plan
     condition: succeeded()
     jobs:
+      - job: ApprovalGate
+        displayName: Wait for approval
+        pool: server
+        timeoutInMinutes: 4320  # 3 days
+        steps:
+          - task: ManualValidation@0
+            timeoutInMinutes: 4320
+            inputs:
+              notifyUsers: |
+                amareshguligoudar@gmail.com
+              instructions: 'Review the Terraform plan output and approve to proceed with apply.'
+      
       - job: Apply
         displayName: Terraform Apply
         steps:

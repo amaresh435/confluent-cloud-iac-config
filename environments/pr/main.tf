@@ -6,7 +6,7 @@ locals {
   env_location                = "us-central1"
   tfm_sa_confluent_api_key    = data.google_secret_manager_secret_version.tfm_confluent_api_key.secret_data
   tfm_sa_confluent_api_secret = data.google_secret_manager_secret_version.tfm_confluent_api_secret.secret_data
-  confluent_cltr_name         = [join("-", [local.resource_prefix])]
+  confluent_cltr_name         = [join("-", "conf", "kafka")]
   secret_service_accounts     = ["terraform@vidya-00001.iam.gserviceaccount.com"]
 
   labels = {

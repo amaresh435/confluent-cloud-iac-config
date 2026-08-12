@@ -14,7 +14,7 @@ data "confluent_organization" "main" {}
 resource "confluent_environment" "main" {
   for_each = toset(var.confluent_cltr_name)
 
-  display_name = join("-", [local.resource_prefix, each.key, "env"])
+  display_name = join("-", [each.key, "env"])
 
   stream_governance {
     package = var.stream_governance

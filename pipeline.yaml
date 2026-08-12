@@ -129,6 +129,13 @@ stages:
               "$install_dir/terraform" version
             displayName: Install Terraform ${{ parameters.terraformVersion }}
 
+          - script: terraform init -input=false
+            displayName: Terraform init
+            workingDirectory: $(tfWorkingDir)
+            env:
+              GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+              CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+              CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
           - script: terraform apply -input=false -auto-approve
             displayName: Terraform apply

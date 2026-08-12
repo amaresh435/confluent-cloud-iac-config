@@ -12,7 +12,7 @@ locals {
 data "confluent_organization" "main" {}
 
 resource "confluent_environment" "main" {
-  display_name = join("-", ["var.resource_prefix", "env"])
+  display_name = join("-", [var.resource_prefix, "env"])
 
   stream_governance {
     package = var.stream_governance

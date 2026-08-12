@@ -8,11 +8,11 @@ output "cluster_bootstrap_endpoints" {
   value       = { for key, cluster in confluent_kafka_cluster.gcp_dedicated : key => cluster.bootstrap_endpoint }
 }
 
-output "environment_ids" {
-  description = "Confluent environment IDs, keyed by input environment key."
-  value       = { for key, environment in confluent_environment.main : key => environment.id }
-}
-
+#output "environment_ids" {
+#  description = "Confluent environment IDs, keyed by input environment key."
+#  value       = { for key, environment in confluent_environment.main : key => environment.display_name }
+#}
+#    
 #output "service_account_ids" {
 #  description = "Confluent service account IDs, keyed by input environment key."
 #  value       = { for key, account in confluent_service_account.main : key => account.email }

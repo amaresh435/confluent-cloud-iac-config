@@ -13,14 +13,14 @@ parameters:
     displayName: Terraform working directory
     type: string
     default: ./environments/pr/
-  # - name: terraformPlanExtraArgs
-  #   displayName: Extra terraform plan arguments
-  #   type: string
-  #   default: ''
-  # - name: terraformApplyExtraArgs
-  #   displayName: Extra terraform apply arguments
-  #   type: string
-  #   default: ''
+  - name: terraformPlanExtraArgs
+    displayName: Extra terraform plan arguments
+    type: string
+    default: '-parallelism=2'
+  - name: terraformApplyExtraArgs
+    displayName: Extra terraform apply arguments
+    type: string
+    default: '-parallelism=2'
 
 variables:
   tfWorkingDir: ${{ parameters.terraformWorkingDirectory }}

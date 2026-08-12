@@ -129,11 +129,6 @@ stages:
               "$install_dir/terraform" version
             displayName: Install Terraform ${{ parameters.terraformVersion }}
 
-          - bash: |
-              set -euo pipefail
-              mkdir -p "$(tfWorkingDir)"
-              tar -xzf "$(Pipeline.Workspace)/plan-artifact/$(planArtifactName).tar.gz" -C "$(tfWorkingDir)"
-            displayName: Extract plan output into working directory
 
           - script: terraform apply -input=false -auto-approve tfplan
             displayName: Terraform apply

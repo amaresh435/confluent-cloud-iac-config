@@ -34,7 +34,7 @@ resource "confluent_kafka_cluster" "gcp_dedicated" {
   }
 
   environment {
-    id = confluent_environment.main[each.key].id
+    id = confluent_environment.main.id
   }
 
   dynamic "network" {
@@ -55,7 +55,7 @@ resource "confluent_role_binding" "main" {
 
   principal   = "User:${confluent_service_account.main.id}"
   role_name   = "EnvironmentAdmin"
-  crn_pattern = confluent_environment.main[each.key].resource_name
+  crn_pattern = confluent_environment.main.resource_name
 }
 
 resource "confluent_role_binding" "account_admin" {

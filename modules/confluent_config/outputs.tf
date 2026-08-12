@@ -13,7 +13,8 @@ output "environment_ids" {
   value       = { for key, environment in confluent_environment.main : key => environment.id }
 }
 
-output "service_account_ids" {
-  description = "Confluent service account IDs, keyed by input environment key."
-  value       = { for key, account in confluent_service_account.main : key => account.email }
-}
+#output "service_account_ids" {
+#  description = "Confluent service account IDs, keyed by input environment key."
+#  value       = { for key, account in confluent_service_account.main : key => account.email }
+#}
+#

@@ -129,12 +129,6 @@ stages:
               "$install_dir/terraform" version
             displayName: Install Terraform ${{ parameters.terraformVersion }}
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download plan artifact
-            inputs:
-              artifact: $(planArtifactName)
-              path: $(Pipeline.Workspace)/plan-artifact
-
           - bash: |
               set -euo pipefail
               mkdir -p "$(tfWorkingDir)"

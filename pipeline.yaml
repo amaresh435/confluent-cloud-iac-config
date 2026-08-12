@@ -9,72 +9,130 @@ parameters:
     displayName: Terraform version
     type: string
     default: '1.9.8'
-
   - name: terraformWorkingDirectory
     displayName: Terraform working directory
     type: string
     default: ./environments/pr/
+  # - name: terraformPlanExtraArgs
+  #   displayName: Extra terraform plan arguments
+  #   type: string
+  #   default: ''
+  # - name: terraformApplyExtraArgs
+  #   displayName: Extra terraform apply arguments
+  #   type: string
+  #   default: ''
 
-  # Use for trusted Terraform CLI options, for example: -var-file=production.tfvars
-  #- name: terraformPlanExtraArgs
-  #  displayName: Extra terraform plan arguments
-  #  type: string
-  #  default: ''
+variables:
+  tfWorkingDir: ${{ parameters.terraformWorkingDirectory }}
+  planArtifactName: tfplan-artifact
 
-  # Use for trusted Terraform CLI options, for example: -lock-timeout=5m
-  #- name: terraformApplyExtraArgs
-  #  displayName: Extra terraform apply arguments
-  #  type: string
-  #  default: ''
+stages:
+  - stage: Plan
+    displayName: Terraform Plan
+    jobs:
+      - job: Plan
+        displayName: Terraform Plan
+        steps:
+          - checkout: self
 
-steps:
-  - checkout: self
+          - task: DownloadSecureFile@1
+            name: tfmSecureFile
+            displayName: Download GCP service-account credential
+            inputs:
+              secureFile: tfm-sa-gcp-amar.json
 
-  - task: DownloadSecureFile@1
-    name: tfmSecureFile
-    displayName: Download GCP service-account credential
-    inputs:
-      secureFile: tfm-sa-gcp-amar.json
+          - bash: |
+              set -euo pipefail
+              terraform_version='${{ parameters.terraformVersion }}'
+              install_dir="$HOME/.local/bin"
+              archive="terraform_${terraform_version}_linux_amd64.zip"
+              download_url="https://releases.hashicorp.com/terraform/${terraform_version}/${archive}"
+              mkdir -p "$install_dir"
+              curl --fail --silent --show-error --location --retry 3 "$download_url" --output "/tmp/$archive"
+              unzip -o "/tmp/$archive" -d "$install_dir"
+              chmod +x "$install_dir/terraform"
+              echo "##vso[task.prependpath]$install_dir"
+              "$install_dir/terraform" version
+            displayName: Install Terraform ${{ parameters.terraformVersion }}
 
-  #- task: TerraformInstaller@1
-  - bash: |
-      set -euo pipefail
+          - script: terraform init -input=false
+            displayName: Terraform init
+            workingDirectory: $(tfWorkingDir)
+            env:
+              GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+              CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+              CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-      terraform_version='${{ parameters.terraformVersion }}'
-      install_dir="$HOME/.local/bin"
-      archive="terraform_${terraform_version}_linux_amd64.zip"
-      download_url="https://releases.hashicorp.com/terraform/${terraform_version}/${archive}"
+          - script: terraform plan -input=false -out=tfplan ${{ parameters.terraformPlanExtraArgs }}
+            displayName: Terraform plan
+            workingDirectory: $(tfWorkingDir)
+            env:
+              GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+              CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+              CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
 
-      mkdir -p "$install_dir"
-      curl --fail --silent --show-error --location --retry 3 "$download_url" --output "/tmp/$archive"
-      unzip -o "/tmp/$archive" -d "$install_dir"
-      chmod +x "$install_dir/terraform"
-      echo "##vso[task.prependpath]$install_dir"
-      "$install_dir/terraform" version
-    displayName: Install Terraform ${{ parameters.terraformVersion }}
-    #inputs:
-    #  terraformVersion: ${{ parameters.terraformVersion }}
+          # Package the whole working dir (includes .terraform, tfplan, lock file)
+          # so Apply doesn't need to re-init against a potentially different state.
+          - task: ArchiveFiles@2
+            displayName: Archive plan output
+            inputs:
+              rootFolderOrFile: $(tfWorkingDir)
+              includeRootFolder: false
+              archiveType: tar
+              archiveFile: $(Build.ArtifactStagingDirectory)/$(planArtifactName).tar.gz
 
-  - script: terraform init -input=false
-    displayName: Terraform init
-    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
-      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
-      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
+          - task: PublishPipelineArtifact@1
+            displayName: Publish plan artifact
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/$(planArtifactName).tar.gz
+              artifact: $(planArtifactName)
 
-  - script: terraform plan -input=false -out=tfplan 
-    displayName: Terraform plan
-    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
-      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
-      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
+  - stage: Apply
+    displayName: Terraform Apply
+    dependsOn: Plan
+    condition: succeeded()
+    jobs:
+      - job: Apply
+        displayName: Terraform Apply
+        steps:
+          - checkout: self
 
-  - script: terraform apply -input=false -auto-approve tfplan
-    displayName: Terraform apply
-    workingDirectory: ${{ parameters.terraformWorkingDirectory }}
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
-      CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
-      CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)
+          - task: DownloadSecureFile@1
+            name: tfmSecureFile
+            displayName: Download GCP service-account credential
+            inputs:
+              secureFile: tfm-sa-gcp-amar.json
+
+          - bash: |
+              set -euo pipefail
+              terraform_version='${{ parameters.terraformVersion }}'
+              install_dir="$HOME/.local/bin"
+              archive="terraform_${terraform_version}_linux_amd64.zip"
+              download_url="https://releases.hashicorp.com/terraform/${terraform_version}/${archive}"
+              mkdir -p "$install_dir"
+              curl --fail --silent --show-error --location --retry 3 "$download_url" --output "/tmp/$archive"
+              unzip -o "/tmp/$archive" -d "$install_dir"
+              chmod +x "$install_dir/terraform"
+              echo "##vso[task.prependpath]$install_dir"
+              "$install_dir/terraform" version
+            displayName: Install Terraform ${{ parameters.terraformVersion }}
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download plan artifact
+            inputs:
+              artifact: $(planArtifactName)
+              path: $(Pipeline.Workspace)/plan-artifact
+
+          - bash: |
+              set -euo pipefail
+              mkdir -p "$(tfWorkingDir)"
+              tar -xzf "$(Pipeline.Workspace)/plan-artifact/$(planArtifactName).tar.gz" -C "$(tfWorkingDir)"
+            displayName: Extract plan output into working directory
+
+          - script: terraform apply -input=false -auto-approve tfplan ${{ parameters.terraformApplyExtraArgs }}
+            displayName: Terraform apply
+            workingDirectory: $(tfWorkingDir)
+            env:
+              GOOGLE_APPLICATION_CREDENTIALS: $(tfmSecureFile.secureFilePath)
+              CONFLUENT_CLOUD_API_KEY: $(CONFLUENT_CLOUD_API_KEY)
+              CONFLUENT_CLOUD_API_SECRET: $(CONFLUENT_CLOUD_API_SECRET)

@@ -141,7 +141,7 @@ stages:
               tar -xzf "$(Pipeline.Workspace)/plan-artifact/$(planArtifactName).tar.gz" -C "$(tfWorkingDir)"
             displayName: Extract plan output into working directory
 
-          - script: terraform apply -input=false -auto-approve tfplan ${{ parameters.terraformApplyExtraArgs }}
+          - script: terraform apply -input=false -auto-approve tfplan
             displayName: Terraform apply
             workingDirectory: $(tfWorkingDir)
             env:
